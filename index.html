@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sharada ResultPro — Sharada Classes, Dapoli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1f2937;
+      --border: rgba(255, 255, 255, 0.08);
+      --border2: rgba(255, 255, 255, 0.14);
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #f0883e;
+      --accent2: #d56d22;
+      --gold: #fbbf24;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --purple: #a855f7;
+      --sidebar-w: 240px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    /* Layout */
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sidebar */
+    .logo-area {
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--gold));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .logo-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 15px;
+      line-height: 1.2;
+      color: var(--text);
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0.05em;
+    }
+
+    .nav {
+      padding: 12px 8px;
+      flex: 1;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0 8px;
+      margin-bottom: 6px;
+      margin-top: 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.18s;
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: rgba(240, 136, 62, 0.14);
+      color: var(--accent);
+    }
+
+    .nav-item.logout {
+      color: var(--red);
+    }
+
+    .nav-item.logout:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+    }
+
+    .nav-item .icon {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .page-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+    }
+
+    .page-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.18s;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: var(--border2);
+    }
+
+    .btn-green {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-green:hover {
+      background: rgba(34, 197, 94, 0.25);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    /* Content */
+    .content {
+      padding: 24px 28px;
+      flex: 1;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Stat cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--glow-c, transparent);
+      opacity: 0.06;
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    .stat-card.orange {
+      --glow-c: linear-gradient(135deg, var(--accent), transparent);
+      border-color: rgba(240, 136, 62, 0.2);
+    }
+
+    .stat-card.green {
+      --glow-c: linear-gradient(135deg, var(--green), transparent);
+      border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    .stat-card.blue {
+      --glow-c: linear-gradient(135deg, var(--blue), transparent);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .stat-card.purple {
+      --glow-c: linear-gradient(135deg, var(--purple), transparent);
+      border-color: rgba(168, 85, 247, 0.2);
+    }
+
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 32px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .stat-icon {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      font-size: 22px;
+      opacity: 0.4;
+    }
+
+    .stat-delta {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--green);
+      margin-top: 6px;
+    }
+
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Table */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+      letter-spacing: 0.04em;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 10px 13px;
+      font-size: 13.5px;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      transition: border-color 0.18s;
+      outline: none;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .form-select option {
+      background: var(--surface);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .input-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-a {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+    }
+
+    .badge-b {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--blue);
+    }
+
+    .badge-c {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--gold);
+    }
+
+    .badge-d {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+    }
+
+    .badge-course {
+      background: rgba(168, 85, 247, 0.12);
+      color: #c084fc;
+    }
+
+    .badge-best {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--green);
+      font-size: 10px;
+    }
+
+    .badge-weak {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      font-size: 10px;
+    }
+
+    /* Subject marks row */
+    .marks-row {
+      display: grid;
+      grid-template-columns: 1fr 100px 100px 80px 60px 40px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .marks-row:last-child {
+      border-bottom: none;
+    }
+
+    .marks-row.header {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding-bottom: 8px;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    /* Avatar */
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Section tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 8px 18px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.18s;
+    }
+
+    .tab.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      width: 680px;
+      max-width: calc(100vw - 32px);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 13px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 320px;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast-icon {
+      font-size: 18px;
+    }
+
+    /* Report preview */
+    .report-preview {
+      background: white;
+      color: #1a1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .report-header-band {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
+      color: white;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .report-logo-circle {
+      width: 64px;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
+    }
+
+    .report-inst-name {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .report-inst-sub {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-top: 3px;
+    }
+
+    .report-stripe {
+      height: 5px;
+      background: linear-gradient(90deg, #f0883e, #fbbf24, #f0883e);
+    }
+
+    .report-student-band {
+      background: #f8f9fa;
+      padding: 16px 28px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .report-field-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .report-field-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+      margin-top: 2px;
+    }
+
+    .report-body {
+      padding: 20px 28px;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .report-table th {
+      background: #1e3a5f;
+      color: white;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .report-table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .report-table tr:nth-child(even) td {
+      background: #fafafa;
+    }
+
+    .report-table tr.best-row td {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+    }
+
+    .report-table tr.weak-row td {
+      background: #fff7f7;
+      border-left: 3px solid #ef4444;
+    }
+
+    .report-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .report-sum-card {
+      background: #1e3a5f;
+      color: white;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .report-sum-card.gold {
+      background: linear-gradient(135deg, #b45309, #d97706);
+    }
+
+    .report-sum-label {
+      font-size: 10px;
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .report-sum-value {
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .report-footer-band {
+      background: #f8f9fa;
+      padding: 16px 28px;
+      border-top: 2px solid #1e3a5f;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .report-sig-box {
+      border-top: 1px solid #9ca3af;
+      padding-top: 6px;
+      text-align: center;
+      font-size: 11px;
+      color: #6b7280;
+      width: 140px;
+    }
+
+    .report-dev {
+      font-size: 10px;
+      color: #9ca3af;
+      text-align: center;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.6
+      }
+    }
+
+    /* Page visibility */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border2);
+      border-radius: 10px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(240, 136, 62, 0.04);
+    }
+
+    /* Sparkline placeholder */
+    .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 36px;
+    }
+
+    .mini-bar {
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+      opacity: 0.7;
+      flex: 1;
+      transition: height 0.4s;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"><span class="toast-icon" id="toastIcon">✅</span><span id="toastMsg">Done!</span></div>
+
+  <!-- Generate Result Modal -->
+  <div class="modal-overlay" id="genModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Generate Result Card</div>
+        <button class="modal-close" onclick="closeModal('genModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-row">
+          <div class="form-group">
+            <label class="form-label">Student Name</label>
+            <input type="text" class="form-input" id="genName" placeholder="e.g. Aryan Patil">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Roll Number</label>
+            <input type="text" class="form-input" id="genRoll" placeholder="e.g. 2024-PCM-01">
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="form-group">
+            <label class="form-label">Course</label>
+            <select class="form-select" id="genCourse" onchange="loadSubjects()">
+              <option value="">Select Course</option>
+              <option value="PCM">PCM – Physics, Chemistry, Maths</option>
+              <option value="PCMB">PCMB – Phy, Chem, Maths, Bio</option>
+              <option value="JEE">JEE – Physics, Chemistry, Maths</option>
+              <option value="NEET">NEET – Physics, Chemistry, Biology</option>
+              <option value="CET">CET – Physics, Chemistry, Maths</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Batch / Year</label>
+            <input type="text" class="form-input" id="genBatch" placeholder="e.g. 2024-25">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Test / Exam Name</label>
+          <input type="text" class="form-input" id="genExam" placeholder="e.g. Mid-Term Test 1 · November 2024">
+        </div>
+        <div id="subjectMarksArea" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div class="form-label" style="margin:0">Subject Marks</div>
+            <button class="btn btn-ghost btn-sm" onclick="addCustomSubject()">＋ Add Subject</button>
+          </div>
+          <div class="marks-row header">
+            <div>Subject</div>
+            <div>Obtained</div>
+            <div>Out Of</div>
+            <div>%</div>
+            <div>Grade</div>
+            <div></div>
+          </div>
+          <div id="marksRows"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('genModal')">Cancel</button>
+        <button class="btn btn-secondary" onclick="previewResult()">👁 Preview</button>
+        <button class="btn btn-primary" onclick="generatePDF()">⬇ Download PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Preview Modal -->
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal" style="width:720px">
+      <div class="modal-header">
+        <div class="modal-title">Result Card Preview</div>
+        <button class="modal-close" onclick="closeModal('previewModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="reportContent"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('previewModal')">Close</button>
+        <button class="btn btn-primary" onclick="generatePDF()">⬇ Download PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Student Modal -->
+  <div class="modal-overlay" id="studentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Add New Student</div>
+        <button class="modal-close" onclick="closeModal('studentModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-row">
+          <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="sName"
+              placeholder="Student full name"></div>
+          <div class="form-group"><label class="form-label">Roll Number</label><input class="form-input" id="sRoll"
+              placeholder="e.g. 2024-PCM-01"></div>
+        </div>
+        <div class="input-row">
+          <div class="form-group">
+            <label class="form-label">Course</label>
+            <select class="form-select" id="sCourse">
+              <option value="PCM">PCM</option>
+              <option value="PCMB">PCMB</option>
+              <option value="JEE">JEE</option>
+              <option value="NEET">NEET</option>
+              <option value="CET">CET</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Batch</label><input class="form-input" id="sBatch"
+              placeholder="2024-25"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Parent/Guardian Name</label><input class="form-input"
+            id="sParent" placeholder="Parent name"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="sPhone"
+            placeholder="Contact number"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('studentModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Layout -->
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo-area">
+        <div class="logo-icon">🎓</div>
+        <div class="logo-name">Sharada ResultPro</div>
+        <div class="logo-sub">SHARADA CLASSES · DAPOLI</div>
+      </div>
+      <nav class="nav">
+        <div class="nav-label">Menu</div>
+        <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">⊞</span>Dashboard</div>
+        <div class="nav-item" onclick="showPage('students',this)"><span class="icon">👥</span>Students <span
+            class="nav-badge" id="studentBadge">0</span></div>
+        <div class="nav-item" onclick="showPage('results',this)"><span class="icon">📊</span>Results <span
+            class="nav-badge" id="resultBadge">0</span></div>
+        <div class="nav-item" onclick="showPage('courses',this)"><span class="icon">📚</span>Courses</div>
+        <div class="nav-label">System</div>
+        <div class="nav-item" onclick="showPage('settings',this)"><span class="icon">⚙</span>Settings</div>
+        <div class="nav-item logout" onclick="handleLogout()"><span class="icon">🔒</span>Logout</div>
+      </nav>
+      <div class="sidebar-footer">Developed by <strong style="color:var(--accent)">Saad Sahebwale</strong></div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="topbar">
+          <div>
+            <div class="page-title">Dashboard</div>
+            <div class="page-sub" id="dashGreeting">Welcome back — Sharada Classes, Dapoli</div>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn btn-secondary"
+              onclick="showPage('students',document.querySelector('[onclick*=students]'))">＋ Add Student</button>
+            <button class="btn btn-primary" onclick="openModal('genModal')">⚡ Generate Result</button>
+          </div>
+        </div>
+        <div class="content">
+          <div class="stats-grid">
+            <div class="stat-card orange">
+              <div class="stat-icon">👥</div>
+              <div class="stat-num" id="totalStudents">0</div>
+              <div class="stat-label">Total Students</div>
+              <div class="stat-delta">↑ Active this batch</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-icon">📋</div>
+              <div class="stat-num" id="totalResults">0</div>
+              <div class="stat-label">Results Generated</div>
+              <div class="stat-delta">↑ PDFs ready</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-icon">📈</div>
+              <div class="stat-num" id="avgPercent">—</div>
+              <div class="stat-label">Avg Performance</div>
+              <div class="stat-delta">↑ Class average</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-icon">🏆</div>
+              <div class="stat-num" id="toppers">0</div>
+              <div class="stat-label">A Grade Students</div>
+              <div class="stat-delta">↑ 90%+ scorers</div>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-bottom:16px">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Recent Results</div>
+                  <div class="card-sub">Latest generated report cards</div>
+                </div>
+                <button class="btn btn-ghost btn-sm"
+                  onclick="showPage('results',document.querySelector('[onclick*=results]'))">View All →</button>
+              </div>
+              <div id="recentResultsTable">
+                <div class="empty-state" style="padding:30px 20px">
+                  <div class="icon">📋</div>
+                  <h3>No results yet</h3>
+                  <p style="font-size:12px;margin-top:4px">Generate your first result card to see it here.</p>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Course Distribution</div>
+                  <div class="card-sub">Students per course</div>
+                </div>
+              </div>
+              <div id="courseChart">
+                <div class="empty-state" style="padding:30px 20px">
+                  <div class="icon">📚</div>
+                  <h3>No data yet</h3>
+                  <p style="font-size:12px;margin-top:4px">Add students to see distribution.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Quick Actions</div>
+                <div class="card-sub">Common tasks</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+              <button class="btn btn-secondary"
+                style="flex-direction:column;padding:18px 12px;gap:8px;font-size:12px;text-align:center"
+                onclick="openModal('genModal')">
+                <span style="font-size:24px">⚡</span>Generate Result
+              </button>
+              <button class="btn btn-secondary"
+                style="flex-direction:column;padding:18px 12px;gap:8px;font-size:12px;text-align:center"
+                onclick="openModal('studentModal')">
+                <span style="font-size:24px">👤</span>Add Student
+              </button>
+              <button class="btn btn-secondary"
+                style="flex-direction:column;padding:18px 12px;gap:8px;font-size:12px;text-align:center"
+                onclick="bulkUploadDemo()">
+                <span style="font-size:24px">📊</span>Bulk Upload
+              </button>
+              <button class="btn btn-secondary"
+                style="flex-direction:column;padding:18px 12px;gap:8px;font-size:12px;text-align:center"
+                onclick="showPage('settings',document.querySelector('[onclick*=settings]'))">
+                <span style="font-size:24px">⚙</span>Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Students Page -->
+      <div class="page" id="page-students">
+        <div class="topbar">
+          <div>
+            <div class="page-title">Students</div>
+            <div class="page-sub">Manage enrolled students</div>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn btn-ghost" onclick="bulkUploadDemo()">⬆ Bulk Import</button>
+            <button class="btn btn-primary" onclick="openModal('studentModal')">＋ Add Student</button>
+          </div>
+        </div>
+        <div class="content">
+          <div style="display:flex;gap:12px;margin-bottom:16px">
+            <input type="text" class="form-input" id="studentSearch" placeholder="🔍  Search by name or roll number..."
+              style="max-width:320px" oninput="filterStudents()">
+            <select class="form-select" id="courseFilter" style="max-width:180px" onchange="filterStudents()">
+              <option value="">All Courses</option>
+              <option value="PCM">PCM</option>
+              <option value="PCMB">PCMB</option>
+              <option value="JEE">JEE</option>
+              <option value="NEET">NEET</option>
+              <option value="CET">CET</option>
+            </select>
+          </div>
+          <div class="card" style="padding:0">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Roll No</th>
+                  <th>Course</th>
+                  <th>Batch</th>
+                  <th>Results</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTableBody"></tbody>
+            </table>
+            <div id="studentsEmpty" class="empty-state" style="display:none">
+              <div class="icon">👥</div>
+              <h3>No students yet</h3>
+              <p style="font-size:12px;margin-top:4px">Add your first student to get started.</p>
+              <button class="btn btn-primary" style="margin-top:14px" onclick="openModal('studentModal')">＋ Add
+                Student</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Page -->
+      <div class="page" id="page-results">
+        <div class="topbar">
+          <div>
+            <div class="page-title">Results</div>
+            <div class="page-sub">All generated report cards</div>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn btn-primary" onclick="openModal('genModal')">⚡ Generate Result</button>
+          </div>
+        </div>
+        <div class="content">
+          <div class="card" style="padding:0">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Exam</th>
+                  <th>Marks</th>
+                  <th>%</th>
+                  <th>Grade</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="resultsTableBody"></tbody>
+            </table>
+            <div id="resultsEmpty" class="empty-state">
+              <div class="icon">📊</div>
+              <h3>No results yet</h3>
+              <p style="font-size:12px;margin-top:4px">Generate result cards and they'll appear here.</p>
+              <button class="btn btn-primary" style="margin-top:14px" onclick="openModal('genModal')">⚡ Generate First
+                Result</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Courses Page -->
+      <div class="page" id="page-courses">
+        <div class="topbar">
+          <div>
+            <div class="page-title">Courses</div>
+            <div class="page-sub">Course & subject configuration</div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">PCM</div>
+              </div>
+              <div style="font-size:13px;color:var(--muted);line-height:2">📘 Physics<br>🧪 Chemistry<br>📐 Mathematics
+              </div>
+              <div style="margin-top:12px;font-size:11px;color:var(--green)">✓ Active Course</div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">PCMB</div>
+              </div>
+              <div style="font-size:13px;color:var(--muted);line-height:2">📘 Physics<br>🧪 Chemistry<br>📐
+                Mathematics<br>🌿 Biology</div>
+              <div style="margin-top:12px;font-size:11px;color:var(--green)">✓ Active Course</div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">JEE</div>
+              </div>
+              <div style="font-size:13px;color:var(--muted);line-height:2">📘 Physics<br>🧪 Chemistry<br>📐 Mathematics
+              </div>
+              <div style="margin-top:12px;font-size:11px;color:var(--green)">✓ Active Course</div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">NEET</div>
+              </div>
+              <div style="font-size:13px;color:var(--muted);line-height:2">📘 Physics<br>🧪 Chemistry<br>🌿 Biology
+              </div>
+              <div style="margin-top:12px;font-size:11px;color:var(--green)">✓ Active Course</div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">CET</div>
+              </div>
+              <div style="font-size:13px;color:var(--muted);line-height:2">📘 Physics<br>🧪 Chemistry<br>📐 Mathematics
+              </div>
+              <div style="margin-top:12px;font-size:11px;color:var(--green)">✓ Active Course</div>
+            </div>
+            <div class="card"
+              style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:160px;color:var(--muted)"
+              onclick="showToast('Custom course builder coming soon!','ℹ️')">
+              <div style="font-size:32px;margin-bottom:8px">＋</div>
+              <div style="font-size:13px;font-weight:500">Add Custom Course</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Page -->
+      <div class="page" id="page-settings">
+        <div class="topbar">
+          <div>
+            <div class="page-title">Settings</div>
+            <div class="page-sub">Institute & system configuration</div>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+          </div>
+        </div>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom:16px">
+                <div class="card-header">
+                  <div class="card-title">🏫 Institute Details</div>
+                </div>
+                <div class="form-group"><label class="form-label">Institute Name</label><input class="form-input"
+                    id="instName" value="Sharada Classes"></div>
+                <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="instAddr"
+                    value="Main Road, Dapoli, Ratnagiri – 415 712"></div>
+                <div class="input-row">
+                  <div class="form-group"><label class="form-label">Phone</label><input class="form-input"
+                      id="instPhone" value="+91 98765 43210"></div>
+                  <div class="form-group"><label class="form-label">Email</label><input class="form-input"
+                      id="instEmail" value="info@sharadaclasses.in"></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">🖼 Logo & Branding</div>
+                </div>
+                <div class="upload-zone"
+                  onclick="showToast('Logo upload requires Supabase storage. See setup guide.','ℹ️')">
+                  <div style="font-size:32px;margin-bottom:8px">🎓</div>
+                  <div style="font-size:13px;font-weight:500;margin-bottom:4px">Click to upload logo</div>
+                  <div style="font-size:11px;color:var(--muted)">PNG, JPG up to 2MB · Appears on all report cards</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:16px">
+                <div class="card-header">
+                  <div class="card-title">📊 Grade System</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:13px">
+                  <div
+                    style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;padding:12px;text-align:center">
+                    <div style="font-size:22px;font-weight:700;color:var(--green)">A</div>
+                    <div style="color:var(--muted);font-size:11px">90% and above</div>
+                  </div>
+                  <div
+                    style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px;text-align:center">
+                    <div style="font-size:22px;font-weight:700;color:var(--blue)">B</div>
+                    <div style="color:var(--muted);font-size:11px">75% – 89%</div>
+                  </div>
+                  <div
+                    style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:12px;text-align:center">
+                    <div style="font-size:22px;font-weight:700;color:var(--gold)">C</div>
+                    <div style="color:var(--muted);font-size:11px">50% – 74%</div>
+                  </div>
+                  <div
+                    style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px;text-align:center;grid-column:span 3">
+                    <div style="font-size:22px;font-weight:700;color:var(--red)">D</div>
+                    <div style="color:var(--muted);font-size:11px">Below 50%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">🗄 Database Setup (Supabase)</div>
+                </div>
+                <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:12px">Connect your Supabase
+                  project for persistent storage, auth, and PDF uploads.</div>
+                <div class="form-group"><label class="form-label">Supabase URL</label><input class="form-input"
+                    placeholder="https://your-project.supabase.co"></div>
+                <div class="form-group"><label class="form-label">Anon Key</label><input class="form-input"
+                    type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></div>
+                <button class="btn btn-secondary btn-sm"
+                  onclick="showToast('Supabase connection test — see setup guide!','ℹ️')">Test Connection</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /app -->
+
+  <script>
+    const COURSES = {
+      PCM: ['Physics', 'Chemistry', 'Mathematics'],
+      PCMB: ['Physics', 'Chemistry', 'Mathematics', 'Biology'],
+      JEE: ['Physics', 'Chemistry', 'Mathematics'],
+      NEET: ['Physics', 'Chemistry', 'Biology'],
+      CET: ['Physics', 'Chemistry', 'Mathematics'],
+    };
+    const COLORS = { Physics: '#3b82f6', Chemistry: '#22c55e', Mathematics: '#f0883e', Biology: '#a855f7' };
+
+    let students = JSON.parse(localStorage.getItem('srp_students') || '[]');
+    let results = JSON.parse(localStorage.getItem('srp_results') || '[]');
+    let settings = JSON.parse(localStorage.getItem('srp_settings') || '{"name":"Sharada Classes","addr":"Main Road, Dapoli, Ratnagiri – 415 712","phone":"+91 98765 43210","email":"info@sharadaclasses.in"}');
+
+    function save() {
+      localStorage.setItem('srp_students', JSON.stringify(students));
+      localStorage.setItem('srp_results', JSON.stringify(results));
+    }
+
+    async function handleLogout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    function showPage(name, el) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      el.classList.add('active');
+      if (name === 'dashboard') refreshDashboard();
+      if (name === 'students') renderStudents();
+      if (name === 'results') renderResults();
+      if (name === 'settings') loadSettings();
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+    function showToast(msg, icon = '✅') {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastIcon').textContent = icon;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    function getGrade(pct) {
+      if (pct >= 90) return 'A';
+      if (pct >= 75) return 'B';
+      if (pct >= 50) return 'C';
+      return 'D';
+    }
+    function gradeClass(g) { return 'badge badge-' + g.toLowerCase(); }
+
+    function loadSubjects() {
+      const course = document.getElementById('genCourse').value;
+      if (!course) { document.getElementById('subjectMarksArea').style.display = 'none'; return; }
+      document.getElementById('subjectMarksArea').style.display = 'block';
+      const subs = COURSES[course] || [];
+      renderMarksRows(subs);
+    }
+
+    function renderMarksRows(subjects) {
+      const c = document.getElementById('marksRows');
+      c.innerHTML = '';
+      subjects.forEach((sub, i) => {
+        const row = document.createElement('div');
+        row.className = 'marks-row';
+        row.dataset.subject = sub;
+        row.innerHTML = `
+      <div style="font-size:13px;font-weight:500">${sub}</div>
+      <div><input type="number" class="form-input" style="padding:7px 10px;font-size:13px" placeholder="0" min="0" oninput="calcRow(this)" data-i="${i}"></div>
+      <div><input type="number" class="form-input" style="padding:7px 10px;font-size:13px" placeholder="100" min="1" value="100" oninput="calcRow(this)" data-i="${i}"></div>
+      <div id="pct-${i}" style="font-size:13px;font-weight:600;color:var(--muted)">—</div>
+      <div id="grade-${i}" style="font-size:13px">—</div>
+      <div><button onclick="removeRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px">✕</button></div>`;
+        c.appendChild(row);
+      });
+    }
+
+    function calcRow(inp) {
+      const row = inp.closest('.marks-row');
+      const inputs = row.querySelectorAll('input[type=number]');
+      const obt = parseFloat(inputs[0].value) || 0, tot = parseFloat(inputs[1].value) || 100;
+      const i = inp.dataset.i;
+      const pct = tot > 0 ? Math.round((obt / tot) * 100) : 0;
+      const g = getGrade(pct);
+      const pEl = document.getElementById('pct-' + i);
+      const gEl = document.getElementById('grade-' + i);
+      if (pEl) { pEl.textContent = pct + '%'; pEl.style.color = pct >= 75 ? 'var(--green)' : pct >= 50 ? 'var(--gold)' : 'var(--red)'; }
+      if (gEl) { gEl.innerHTML = `<span class="${gradeClass(g)}">${g}</span>`; }
+    }
+
+    function addCustomSubject() {
+      const name = prompt('Enter subject name:');
+      if (!name) return;
+      const c = document.getElementById('marksRows');
+      const i = c.children.length;
+      const row = document.createElement('div');
+      row.className = 'marks-row';
+      row.dataset.subject = name;
+      row.innerHTML = `
+    <div style="font-size:13px;font-weight:500;color:var(--accent)">${name} <span style="font-size:10px;color:var(--muted)">(custom)</span></div>
+    <div><input type="number" class="form-input" style="padding:7px 10px;font-size:13px" placeholder="0" min="0" oninput="calcRow(this)" data-i="${i}"></div>
+    <div><input type="number" class="form-input" style="padding:7px 10px;font-size:13px" placeholder="100" min="1" value="100" oninput="calcRow(this)" data-i="${i}"></div>
+    <div id="pct-${i}" style="font-size:13px;font-weight:600;color:var(--muted)">—</div>
+    <div id="grade-${i}" style="font-size:13px">—</div>
+    <div><button onclick="removeRow(this)" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px">✕</button></div>`;
+      c.appendChild(row);
+    }
+
+    function removeRow(btn) { btn.closest('.marks-row').remove(); }
+
+    function collectMarks() {
+      const rows = document.querySelectorAll('#marksRows .marks-row');
+      let marks = [];
+      let totalObt = 0, totalMax = 0;
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll('input[type=number]');
+        const sub = row.dataset.subject;
+        const obt = parseFloat(inputs[0].value) || 0;
+        const tot = parseFloat(inputs[1].value) || 100;
+        const pct = tot > 0 ? Math.round((obt / tot) * 100) : 0;
+        marks.push({ subject: sub, obtained: obt, total: tot, pct, grade: getGrade(pct) });
+        totalObt += obt; totalMax += tot;
+      });
+      const overallPct = totalMax > 0 ? Math.round((totalObt / totalMax) * 100) : 0;
+      return { marks, totalObt, totalMax, overallPct, finalGrade: getGrade(overallPct) };
+    }
+
+    function getResultData() {
+      const name = document.getElementById('genName').value.trim() || 'Student Name';
+      const roll = document.getElementById('genRoll').value.trim() || '—';
+      const course = document.getElementById('genCourse').value || 'PCM';
+      const batch = document.getElementById('genBatch').value.trim() || '2024-25';
+      const exam = document.getElementById('genExam').value.trim() || 'Term Test';
+      const { marks, totalObt, totalMax, overallPct, finalGrade } = collectMarks();
+      return { name, roll, course, batch, exam, marks, totalObt, totalMax, overallPct, finalGrade };
+    }
+
+    function buildReportHTML(d) {
+      const bestIdx = d.marks.reduce((bi, m, i, a) => m.pct > a[bi].pct ? i : bi, 0);
+      const weakIdx = d.marks.reduce((bi, m, i, a) => m.pct < a[bi].pct ? i : bi, 0);
+      const rows = d.marks.map((m, i) => {
+        const cls = i === bestIdx ? 'best-row' : i === weakIdx ? 'weak-row' : '';
+        const tag = i === bestIdx ? '<span style="background:#dcfce7;color:#15803d;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;margin-left:6px">★ BEST</span>' :
+          i === weakIdx ? '<span style="background:#fee2e2;color:#dc2626;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;margin-left:6px">▾ WEAK</span>' : '';
+        const gradeColors = { A: '#15803d', B: '#1d4ed8', C: '#b45309', D: '#dc2626' };
+        return `<tr class="${cls}">
+      <td><strong>${m.subject}</strong>${tag}</td>
+      <td style="text-align:center">${m.obtained}</td>
+      <td style="text-align:center">${m.total}</td>
+      <td style="text-align:center;font-weight:600">${m.pct}%</td>
+      <td style="text-align:center;font-weight:700;color:${gradeColors[m.grade] || '#111'}">${m.grade}</td>
+    </tr>`;
+      }).join('');
+      const s = settings;
+      return `<div class="report-preview">
+    <div class="report-header-band">
+      <div class="report-logo-circle">🎓</div>
+      <div>
+        <div class="report-inst-name">${s.name || 'Sharada Classes'}</div>
+        <div class="report-inst-sub">📍 ${s.addr || 'Dapoli, Ratnagiri'} &nbsp;|&nbsp; 📞 ${s.phone || '—'} &nbsp;|&nbsp; ✉ ${s.email || '—'}</div>
+        <div style="margin-top:8px;font-size:11px;opacity:0.7;letter-spacing:0.1em;text-transform:uppercase">Student Report Card · ${d.exam}</div>
+      </div>
+    </div>
+    <div class="report-stripe"></div>
+    <div class="report-student-band">
+      <div><div class="report-field-label">Student Name</div><div class="report-field-value">${d.name}</div></div>
+      <div><div class="report-field-label">Roll Number</div><div class="report-field-value">${d.roll}</div></div>
+      <div><div class="report-field-label">Course</div><div class="report-field-value">${d.course}</div></div>
+      <div><div class="report-field-label">Batch</div><div class="report-field-value">${d.batch}</div></div>
+    </div>
+    <div class="report-body">
+      <table class="report-table">
+        <thead><tr>
+          <th>Subject</th><th style="text-align:center">Obtained</th><th style="text-align:center">Out Of</th><th style="text-align:center">Percentage</th><th style="text-align:center">Grade</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="report-summary">
+        <div class="report-sum-card"><div class="report-sum-label">Total Marks</div><div class="report-sum-value">${d.totalObt}</div></div>
+        <div class="report-sum-card"><div class="report-sum-label">Out Of</div><div class="report-sum-value">${d.totalMax}</div></div>
+        <div class="report-sum-card"><div class="report-sum-label">Percentage</div><div class="report-sum-value">${d.overallPct}%</div></div>
+        <div class="report-sum-card gold"><div class="report-sum-label">Final Grade</div><div class="report-sum-value" style="color:white">${d.finalGrade}</div></div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:8px;padding:12px 16px;font-size:12px;color:#374151;margin-bottom:16px">
+        <strong>Performance Summary:</strong> ${d.marks[bestIdx]?.subject || '—'} is the strongest subject (${d.marks[bestIdx]?.pct || 0}%).
+        ${d.marks[weakIdx]?.subject || '—'} needs more attention (${d.marks[weakIdx]?.pct || 0}%).
+        Overall ${d.overallPct >= 75 ? 'excellent performance — keep it up!' : d.overallPct >= 50 ? 'satisfactory performance — there is room to improve.' : 'performance needs significant improvement.'}
+      </div>
+    </div>
+    <div class="report-footer-band">
+      <div class="report-sig-box">Teacher's Signature</div>
+      <div class="report-dev">Report generated by Sharada ResultPro<br>Developed by <strong>Saad Sahebwale</strong> · ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      <div class="report-sig-box">Institute Stamp</div>
+    </div>
+  </div>`;
+    }
+
+    function previewResult() {
+      if (!document.getElementById('genCourse').value) { showToast('Please select a course first.', '⚠️'); return; }
+      if (!document.getElementById('genName').value.trim()) { showToast('Please enter student name.', '⚠️'); return; }
+      const d = getResultData();
+      document.getElementById('reportContent').innerHTML = buildReportHTML(d);
+      closeModal('genModal');
+      openModal('previewModal');
+    }
+
+    function generatePDF() {
+      if (!document.getElementById('genCourse').value) { showToast('Please select a course first.', '⚠️'); return; }
+      if (!document.getElementById('genName').value.trim()) { showToast('Please enter student name.', '⚠️'); return; }
+      const d = getResultData();
+      results.unshift({ id: Date.now(), ...d, date: new Date().toISOString() });
+      save();
+      refreshDashboard();
+      renderResults();
+      updateBadges();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pw = doc.internal.pageSize.getWidth();
+      const s = settings;
+      doc.setFillColor(30, 58, 95);
+      doc.rect(0, 0, pw, 42, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18); doc.setTextColor(255, 255, 255);
+      doc.text(s.name || 'Sharada Classes', 16, 16);
+      doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+      doc.text((s.addr || 'Dapoli') + '  |  ' + (s.phone || '') + '  |  ' + (s.email || ''), 16, 24);
+      doc.text('Student Report Card · ' + d.exam, 16, 32);
+      doc.setFillColor(240, 136, 62); doc.rect(0, 42, pw, 3, 'F');
+      doc.setFillColor(248, 249, 250); doc.rect(0, 45, pw, 22, 'F');
+      doc.setTextColor(107, 114, 128); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+      doc.text('STUDENT NAME', 14, 52); doc.text('ROLL NUMBER', 60, 52); doc.text('COURSE', 106, 52); doc.text('BATCH', 152, 52);
+      doc.setTextColor(17, 24, 39); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+      doc.text(d.name, 14, 60); doc.text(d.roll, 60, 60); doc.text(d.course, 106, 60); doc.text(d.batch, 152, 60);
+      let y = 75;
+      doc.setFillColor(30, 58, 95); doc.rect(0, y, pw, 9, 'F');
+      doc.setTextColor(255, 255, 255); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+      doc.text('SUBJECT', 14, y + 6); doc.text('OBTAINED', 80, y + 6, { align: 'center' }); doc.text('OUT OF', 110, y + 6, { align: 'center' });
+      doc.text('PERCENTAGE', 140, y + 6, { align: 'center' }); doc.text('GRADE', 170, y + 6, { align: 'center' });
+      y += 9;
+      const bestIdx = d.marks.reduce((bi, m, i, a) => m.pct > a[bi].pct ? i : bi, 0);
+      const weakIdx = d.marks.reduce((bi, m, i, a) => m.pct < a[bi].pct ? i : bi, 0);
+      const gc = { A: [21, 128, 61], B: [29, 78, 216], C: [180, 83, 9], D: [220, 38, 38] };
+      d.marks.forEach((m, i) => {
+        if (i === bestIdx) { doc.setFillColor(240, 253, 244); doc.rect(0, y, pw, 10, 'F'); }
+        else if (i === weakIdx) { doc.setFillColor(254, 242, 242); doc.rect(0, y, pw, 10, 'F'); }
+        else if (i % 2 === 1) { doc.setFillColor(250, 250, 250); doc.rect(0, y, pw, 10, 'F'); }
+        doc.setTextColor(17, 24, 39); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+        doc.text(m.subject + (i === bestIdx ? ' ★' : i === weakIdx ? ' ▾' : ''), 14, y + 7);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(m.obtained), 80, y + 7, { align: 'center' });
+        doc.text(String(m.total), 110, y + 7, { align: 'center' });
+        doc.setFont('helvetica', 'bold'); doc.text(m.pct + '%', 140, y + 7, { align: 'center' });
+        const [r, g, b] = gc[m.grade] || [17, 24, 39];
+        doc.setTextColor(r, g, b); doc.text(m.grade, 170, y + 7, { align: 'center' });
+        y += 10;
+      });
+      y += 6;
+      const sumCards = [{ label: 'Total Marks', val: d.totalObt }, { label: 'Out Of', val: d.totalMax }, { label: 'Percentage', val: d.overallPct + '%' }, { label: 'Final Grade', val: d.finalGrade, gold: true }];
+      const cardW = (pw - 28 - 18) / 4;
+      sumCards.forEach((c, i) => {
+        const x = 14 + i * (cardW + 6);
+        if (c.gold) doc.setFillColor(180, 83, 9); else doc.setFillColor(30, 58, 95);
+        doc.roundedRect(x, y, cardW, 18, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+        doc.text(c.label, x + cardW / 2, y + 7, { align: 'center' });
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
+        doc.text(String(c.val), x + cardW / 2, y + 15, { align: 'center' });
+      });
+      y += 26;
+      doc.setFillColor(248, 249, 250); doc.roundedRect(14, y, pw - 28, 14, 2, 2, 'F');
+      doc.setTextColor(55, 65, 81); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+      const perf = `Performance: ${d.marks[bestIdx]?.subject || '—'} is strongest (${d.marks[bestIdx]?.pct || 0}%). ${d.marks[weakIdx]?.subject || '—'} needs attention (${d.marks[weakIdx]?.pct || 0}%). Overall ${d.overallPct}% — Grade ${d.finalGrade}.`;
+      doc.text(perf, pw / 2, y + 9, { align: 'center', maxWidth: pw - 32 });
+      y += 22;
+      doc.setDrawColor(156, 163, 175); doc.setFillColor(255, 255, 255);
+      doc.roundedRect(14, y, 55, 18, 2, 2, 'FD'); doc.roundedRect(pw - 70, y, 55, 18, 2, 2, 'FD');
+      doc.setTextColor(107, 114, 128); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+      doc.text("Teacher's Signature", 14 + 27.5, y + 13, { align: 'center' });
+      doc.text("Institute Stamp", pw - 70 + 27.5, y + 13, { align: 'center' });
+      const pageH = doc.internal.pageSize.getHeight();
+      doc.setFillColor(30, 58, 95); doc.rect(0, pageH - 10, pw, 10, 'F');
+      doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+      doc.text('Developed by Saad Sahebwale  ·  Sharada ResultPro  ·  ' + new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }), pw / 2, pageH - 3.5, { align: 'center' });
+      const filename = `${d.name.replace(/\s+/g, '_')}_${d.course}_Result.pdf`;
+      doc.save(filename);
+      closeModal('genModal');
+      closeModal('previewModal');
+      showToast(`PDF downloaded: ${filename}`, '⬇');
+    }
+
+    function addStudent() {
+      const name = document.getElementById('sName').value.trim();
+      const roll = document.getElementById('sRoll').value.trim();
+      if (!name) { showToast('Student name is required.', '⚠️'); return; }
+      if (!roll) { showToast('Roll number is required.', '⚠️'); return; }
+      const student = {
+        id: Date.now(), name, roll,
+        course: document.getElementById('sCourse').value,
+        batch: document.getElementById('sBatch').value.trim() || '2024-25',
+        parent: document.getElementById('sParent').value.trim(),
+        phone: document.getElementById('sPhone').value.trim(),
+      };
+      students.push(student);
+      save(); renderStudents(); refreshDashboard(); updateBadges();
+      closeModal('studentModal');
+      ['sName', 'sRoll', 'sBatch', 'sParent', 'sPhone'].forEach(id => document.getElementById(id).value = '');
+      showToast(`${name} added successfully!`, '✅');
+    }
+
+    function renderStudents(list = null) {
+      const data = list || students;
+      const tbody = document.getElementById('studentsTableBody');
+      const empty = document.getElementById('studentsEmpty');
+      tbody.innerHTML = '';
+      if (!data.length) { empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      data.forEach(s => {
+        const res = results.filter(r => r.name === s.name || r.roll === s.roll).length;
+        const initials = s.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        const colors = ['#f0883e', '#3b82f6', '#22c55e', '#a855f7', '#fbbf24'];
+        const col = colors[Math.abs(s.name.charCodeAt(0)) % colors.length];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar" style="background:${col}22;color:${col}">${initials}</div>
+        <div><div style="font-size:13px;font-weight:500">${s.name}</div><div style="font-size:11px;color:var(--muted)">${s.parent || '—'}</div></div>
+      </div></td>
+      <td><code style="font-size:12px;background:var(--bg);padding:3px 7px;border-radius:5px;border:1px solid var(--border)">${s.roll}</code></td>
+      <td><span class="badge badge-course">${s.course}</span></td>
+      <td style="font-size:13px;color:var(--muted)">${s.batch}</td>
+      <td style="font-size:13px">${res > 0 ? `<span style="color:var(--green)">${res} result${res > 1 ? 's' : ''}</span>` : '<span style="color:var(--muted)">None yet</span>'}</td>
+      <td>
+        <button class="btn btn-primary btn-sm" onclick="quickGen('${s.name}','${s.roll}','${s.course}','${s.batch}')">⚡ Generate</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="deleteStudent(${s.id})">✕</button>
+      </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterStudents() {
+      const q = document.getElementById('studentSearch').value.toLowerCase();
+      const cf = document.getElementById('courseFilter').value;
+      renderStudents(students.filter(s =>
+        (s.name.toLowerCase().includes(q) || s.roll.toLowerCase().includes(q)) &&
+        (cf === '' || s.course === cf)
+      ));
+    }
+
+    function deleteStudent(id) {
+      if (!confirm('Delete this student?')) return;
+      students = students.filter(s => s.id !== id);
+      save(); renderStudents(); refreshDashboard(); updateBadges();
+      showToast('Student removed.', '🗑');
+    }
+
+    function quickGen(name, roll, course, batch) {
+      document.getElementById('genName').value = name;
+      document.getElementById('genRoll').value = roll;
+      document.getElementById('genCourse').value = course;
+      document.getElementById('genBatch').value = batch;
+      loadSubjects();
+      openModal('genModal');
+    }
+
+    function renderResults() {
+      const tbody = document.getElementById('resultsTableBody');
+      const empty = document.getElementById('resultsEmpty');
+      tbody.innerHTML = '';
+      if (!results.length) { empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      results.forEach(r => {
+        const d = new Date(r.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        const gc = { A: 'badge-a', B: 'badge-b', C: 'badge-c', D: 'badge-d' };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+      <td><div style="font-weight:500;font-size:13px">${r.name}</div><div style="font-size:11px;color:var(--muted)">${r.roll}</div></td>
+      <td><span class="badge badge-course">${r.course}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${r.exam}</td>
+      <td style="font-size:13px">${r.totalObt} / ${r.totalMax}</td>
+      <td style="font-size:13px;font-weight:600;color:${r.overallPct >= 75 ? 'var(--green)' : r.overallPct >= 50 ? 'var(--gold)' : 'var(--red)'}">${r.overallPct}%</td>
+      <td><span class="badge ${gc[r.finalGrade] || 'badge-d'}">${r.finalGrade}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${d}</td>
+      <td>
+        <button class="btn btn-green btn-sm" onclick="redownload(${r.id})">⬇ PDF</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="deleteResult(${r.id})">✕</button>
+      </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deleteResult(id) {
+      if (!confirm('Delete this result?')) return;
+      results = results.filter(r => r.id !== id);
+      save(); renderResults(); refreshDashboard(); updateBadges();
+      showToast('Result removed.', '🗑');
+    }
+
+    function redownload(id) {
+      const r = results.find(x => x.id === id);
+      if (!r) return;
+      document.getElementById('genName').value = r.name;
+      document.getElementById('genRoll').value = r.roll;
+      document.getElementById('genCourse').value = r.course;
+      document.getElementById('genBatch').value = r.batch;
+      document.getElementById('genExam').value = r.exam;
+      loadSubjects();
+      setTimeout(() => {
+        const rows = document.querySelectorAll('#marksRows .marks-row');
+        r.marks.forEach((m, i) => {
+          if (rows[i]) {
+            const inputs = rows[i].querySelectorAll('input[type=number]');
+            if (inputs[0]) inputs[0].value = m.obtained;
+            if (inputs[1]) inputs[1].value = m.total;
+            calcRow(inputs[0]);
+          }
+        });
+        generatePDF();
+      }, 100);
+    }
+
+    function refreshDashboard() {
+      document.getElementById('totalStudents').textContent = students.length;
+      document.getElementById('totalResults').textContent = results.length;
+      const aGrades = results.filter(r => r.finalGrade === 'A').length;
+      document.getElementById('toppers').textContent = aGrades;
+      if (results.length) {
+        const avg = Math.round(results.reduce((s, r) => s + r.overallPct, 0) / results.length);
+        document.getElementById('avgPercent').textContent = avg + '%';
+      } else {
+        document.getElementById('avgPercent').textContent = '—';
+      }
+      renderRecentResults();
+      renderCourseChart();
+    }
+
+    function renderRecentResults() {
+      const c = document.getElementById('recentResultsTable');
+      if (!results.length) {
+        c.innerHTML = `<div class="empty-state" style="padding:30px 20px"><div class="icon">📋</div><h3>No results yet</h3><p style="font-size:12px;margin-top:4px">Generate your first result card.</p></div>`;
+        return;
+      }
+      const recent = results.slice(0, 5);
+      c.innerHTML = `<table style="width:100%;font-size:13px;border-collapse:collapse">
+    <thead><tr>${['Student', 'Course', '%', 'Grade'].map(h => `<th style="text-align:left;padding:8px 14px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border)">${h}</th>`).join('')}</tr></thead>
+    <tbody>${recent.map(r => {
+        const gc = { A: 'badge-a', B: 'badge-b', C: 'badge-c', D: 'badge-d' };
+        const pctColor = r.overallPct >= 75 ? 'var(--green)' : r.overallPct >= 50 ? 'var(--gold)' : 'var(--red)';
+        return `<tr><td style="padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04)"><div style="font-weight:500">${r.name}</div><div style="font-size:11px;color:var(--muted)">${r.roll}</div></td>
+        <td style="padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04)"><span class="badge badge-course">${r.course}</span></td>
+        <td style="padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-weight:600;color:${pctColor}">${r.overallPct}%</td>
+        <td style="padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04)"><span class="badge ${gc[r.finalGrade] || 'badge-d'}">${r.finalGrade}</span></td></tr>`;
+      }).join('')}</tbody></table>`;
+    }
+
+    function renderCourseChart() {
+      const counts = {};
+      students.forEach(s => { counts[s.course] = (counts[s.course] || 0) + 1; });
+      const c = document.getElementById('courseChart');
+      if (!Object.keys(counts).length) {
+        c.innerHTML = `<div class="empty-state" style="padding:30px 20px"><div class="icon">📚</div><h3>No data yet</h3><p style="font-size:12px;margin-top:4px">Add students to see distribution.</p></div>`;
+        return;
+      }
+      const max = Math.max(...Object.values(counts));
+      const colors = { PCM: '#f0883e', PCMB: '#a855f7', JEE: '#3b82f6', NEET: '#22c55e', CET: '#fbbf24' };
+      c.innerHTML = Object.entries(counts).map(([course, cnt]) => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+        <span style="font-weight:500">${course}</span>
+        <span style="color:var(--muted)">${cnt} student${cnt > 1 ? 's' : ''}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.round((cnt / max) * 100)}%;background:${colors[course] || 'var(--accent)'}"></div></div>
+    </div>`).join('');
+    }
+
+    function updateBadges() {
+      document.getElementById('studentBadge').textContent = students.length;
+      document.getElementById('resultBadge').textContent = results.length;
+    }
+
+    function loadSettings() {
+      document.getElementById('instName').value = settings.name || 'Sharada Classes';
+      document.getElementById('instAddr').value = settings.addr || 'Main Road, Dapoli';
+      document.getElementById('instPhone').value = settings.phone || '';
+      document.getElementById('instEmail').value = settings.email || '';
+    }
+
+    function saveSettings() {
+      settings = {
+        name: document.getElementById('instName').value.trim(),
+        addr: document.getElementById('instAddr').value.trim(),
+        phone: document.getElementById('instPhone').value.trim(),
+        email: document.getElementById('instEmail').value.trim(),
+      };
+      localStorage.setItem('srp_settings', JSON.stringify(settings));
+      showToast('Settings saved successfully!', '✅');
+    }
+
+    function bulkUploadDemo() { showToast('Bulk Excel upload requires Next.js backend. See setup guide.', 'ℹ️'); }
+
+    function init() {
+      const h = new Date().getHours();
+      const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+      document.getElementById('dashGreeting').textContent = `${greet} — Sharada Classes, Dapoli`;
+      refreshDashboard();
+      updateBadges();
+    }
+    init();
+  </script>
+</body>
+
+</html>
