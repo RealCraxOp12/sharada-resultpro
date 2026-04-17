@@ -51,7 +51,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Links */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Link href="/students" className="bg-blue-600 hover:bg-blue-700 transition rounded-2xl p-6">
                     <p className="text-xl font-bold">👨‍🎓 Students</p>
                     <p className="text-blue-200 text-sm mt-1">Add or manage students</p>
@@ -63,6 +63,10 @@ export default function DashboardPage() {
                 <Link href="/courses" className="bg-green-600 hover:bg-green-700 transition rounded-2xl p-6">
                     <p className="text-xl font-bold">📊 Courses</p>
                     <p className="text-green-100 text-sm mt-1">View course subjects</p>
+                </Link>
+                <Link href="/bulk-import" className="bg-purple-600 hover:bg-purple-700 transition rounded-2xl p-6">
+                    <p className="text-xl font-bold">📥 Bulk Import</p>
+                    <p className="text-purple-100 text-sm mt-1">Upload Excel with marks</p>
                 </Link>
             </div>
 
