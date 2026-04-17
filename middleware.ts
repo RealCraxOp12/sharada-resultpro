@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 const SECRET = new TextEncoder().encode(process.env.ADMIN_SECRET_KEY!);
-const PUBLIC = ['/login', '/api/auth/login'];
+
+// ✅ Just added '/api/ping' here
+const PUBLIC = ['/login', '/api/auth/login', '/api/ping'];
 
 export async function middleware(req: NextRequest) {
     if (PUBLIC.some(p => req.nextUrl.pathname.startsWith(p))) {
