@@ -8,6 +8,8 @@ interface ImportedResult {
     roll: string;
     pct: number;
     grade: string;
+    marks: { subject: string; obtained: number; total: number; pct: number; grade: string }[];
+    course: string;
 }
 
 export default function BulkImportPage() {
@@ -19,6 +21,8 @@ export default function BulkImportPage() {
     const [errorLog, setErrorLog] = useState<string[]>([]);
     const [successCount, setSuccessCount] = useState(0);
     const [errorCount, setErrorCount] = useState(0);
+    const [downloadingAll, setDownloadingAll] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState('');
 
     const gradeColor: Record<string, string> = {
         A: 'text-green-400', B: 'text-blue-400', C: 'text-yellow-400', D: 'text-red-400',
@@ -48,7 +52,6 @@ export default function BulkImportPage() {
         const data = await res.json();
 
         setUploading(false);
-
         if (!res.ok) return alert(data.error || 'Upload failed');
 
         setSuccessCount(data.success);
@@ -56,6 +59,65 @@ export default function BulkImportPage() {
         setResults(data.results || []);
         setErrorLog(data.errorLog || []);
         setDone(true);
+    }
+
+    async function downloadSinglePDF(r: ImportedResult) {
+        const instituteRes = await fetch('/api/settings');
+        const instituteData = await instituteRes.json();
+
+        const marks = r.marks;
+        const totalObt = marks.reduce((s, m) => s + m.obtained, 0);
+        const totalMax = marks.reduce((s, m) => s + m.total, 0);
+        const overallPct = totalMax > 0 ? Math.round((totalObt / totalMax) * 100) : 0;
+        const getGrade = (p: number) => p >= 90 ? 'A' : p >= 75 ? 'B' : p >= 50 ? 'C' : 'D';
+        const sorted = [...marks].sort((a, b) => b.pct - a.pct);
+
+        const res = await fetch('/api/pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                student: {
+                    name: r.name,
+                    roll: r.roll,
+                    course: r.course,
+                    batch: '2025-26',
+                },
+                institute: instituteData.institute,
+                exam: examName,
+                marks,
+                summary: {
+                    totalObtained: totalObt,
+                    totalMax,
+                    overallPct,
+                    finalGrade: getGrade(overallPct),
+                    bestSubject: sorted[0],
+                    weakSubject: sorted[sorted.length - 1],
+                },
+            }),
+        });
+
+        if (res.ok) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${r.name}_${r.course}_Result.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } else {
+            alert(`PDF failed for ${r.name}`);
+        }
+    }
+
+    async function downloadAllPDFs() {
+        setDownloadingAll(true);
+        for (let i = 0; i < results.length; i++) {
+            setDownloadProgress(`${i + 1} of ${results.length}`);
+            await downloadSinglePDF(results[i]);
+            await new Promise(r => setTimeout(r, 900));
+        }
+        setDownloadProgress('');
+        setDownloadingAll(false);
     }
 
     function reset() {
@@ -66,12 +128,12 @@ export default function BulkImportPage() {
         setErrorLog([]);
         setSuccessCount(0);
         setErrorCount(0);
+        setDownloadProgress('');
     }
 
     return (
         <div className="text-white max-w-4xl">
 
-            {/* Header */}
             <div className="mb-6">
                 <h1 className="text-3xl font-bold">📊 Bulk Import Marks</h1>
                 <p className="text-gray-400 mt-1">
@@ -82,7 +144,7 @@ export default function BulkImportPage() {
             {!done ? (
                 <div className="space-y-6">
 
-                    {/* Step 1 — Download Template */}
+                    {/* Step 1 */}
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
                         <div className="flex items-start justify-between gap-4">
                             <div>
@@ -111,7 +173,7 @@ export default function BulkImportPage() {
                         </div>
                     </div>
 
-                    {/* Step 2 — Exam Name */}
+                    {/* Step 2 */}
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
                         <div className="flex items-center gap-2 mb-3">
                             <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">Step 2</span>
@@ -125,13 +187,12 @@ export default function BulkImportPage() {
                         />
                     </div>
 
-                    {/* Step 3 — Upload */}
+                    {/* Step 3 */}
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
                         <div className="flex items-center gap-2 mb-3">
                             <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">Step 3</span>
                             <h2 className="font-bold text-lg">Upload Filled Excel</h2>
                         </div>
-
                         <div
                             className="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center cursor-pointer hover:border-orange-500 transition"
                             onClick={() => document.getElementById('fileInput')?.click()}
@@ -149,21 +210,14 @@ export default function BulkImportPage() {
                                 onChange={e => setFile(e.target.files?.[0] || null)}
                             />
                         </div>
-
                         {file && (
                             <div className="mt-3 flex items-center gap-3">
                                 <span className="text-green-400 text-sm">✓ {file.name} selected</span>
-                                <button
-                                    onClick={() => setFile(null)}
-                                    className="text-gray-500 hover:text-red-400 text-xs transition"
-                                >
-                                    ✕ Remove
-                                </button>
+                                <button onClick={() => setFile(null)} className="text-gray-500 hover:text-red-400 text-xs transition">✕ Remove</button>
                             </div>
                         )}
                     </div>
 
-                    {/* Upload Button */}
                     <button
                         onClick={handleUpload}
                         disabled={uploading || !file || !examName}
@@ -172,7 +226,6 @@ export default function BulkImportPage() {
                         {uploading ? '⏳ Processing... please wait' : '🚀 Import Students & Marks'}
                     </button>
 
-                    {/* Notes */}
                     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
                         <h3 className="font-bold text-sm text-gray-300 mb-3">📋 Important Notes</h3>
                         <ul className="space-y-1.5 text-sm text-gray-400">
@@ -186,7 +239,6 @@ export default function BulkImportPage() {
 
                 </div>
             ) : (
-                /* Results Screen */
                 <div className="space-y-6">
 
                     {/* Summary */}
@@ -201,12 +253,28 @@ export default function BulkImportPage() {
                         </div>
                     </div>
 
-                    {/* Imported Results Table */}
+                    {/* Download All PDFs */}
+                    {results.length > 0 && (
+                        <button
+                            onClick={downloadAllPDFs}
+                            disabled={downloadingAll}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-4 rounded-2xl font-bold text-lg transition flex items-center justify-center gap-3"
+                        >
+                            {downloadingAll
+                                ? `⏳ Downloading ${downloadProgress}...`
+                                : `📥 Download All ${results.length} PDFs`
+                            }
+                        </button>
+                    )}
+
+                    {/* Results Table */}
                     {results.length > 0 && (
                         <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                            <div className="p-4 border-b border-gray-800">
-                                <h2 className="font-bold">✅ Imported Results</h2>
-                                <p className="text-gray-400 text-sm mt-0.5">All students and results saved to database</p>
+                            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                                <div>
+                                    <h2 className="font-bold">✅ Imported Results</h2>
+                                    <p className="text-gray-400 text-sm mt-0.5">All students and results saved to database</p>
+                                </div>
                             </div>
                             <table className="w-full text-sm">
                                 <thead>
@@ -215,6 +283,7 @@ export default function BulkImportPage() {
                                         <th className="text-left px-4 py-3 text-gray-400 font-medium">Roll No</th>
                                         <th className="text-center px-4 py-3 text-gray-400 font-medium">Percentage</th>
                                         <th className="text-center px-4 py-3 text-gray-400 font-medium">Grade</th>
+                                        <th className="text-center px-4 py-3 text-gray-400 font-medium">PDF</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -224,6 +293,14 @@ export default function BulkImportPage() {
                                             <td className="px-4 py-3 text-gray-400">{r.roll}</td>
                                             <td className={`px-4 py-3 text-center font-bold ${gradeColor[r.grade]}`}>{r.pct}%</td>
                                             <td className={`px-4 py-3 text-center font-bold ${gradeColor[r.grade]}`}>{r.grade}</td>
+                                            <td className="px-4 py-3 text-center">
+                                                <button
+                                                    onClick={() => downloadSinglePDF(r)}
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium"
+                                                >
+                                                    📥 PDF
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

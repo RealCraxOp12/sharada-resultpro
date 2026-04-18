@@ -33,8 +33,15 @@ export async function POST(req: NextRequest) {
     const { data: courses } = await supabaseAdmin.from('courses').select('id, name');
     const courseMap = Object.fromEntries((courses || []).map(c => [c.name, c.id]));
 
-    const results = [];
-    const errors = [];
+    const results: {
+        name: string;
+        roll: string;
+        pct: number;
+        grade: string;
+        course: string;
+        marks: { subject: string; obtained: number; total: number; pct: number; grade: string }[];
+    }[] = [];
+    const errors: string[] = [];
 
     for (const row of rows) {
         if (!row.name || !row.roll || !courseMap[row.course]) {
@@ -68,7 +75,7 @@ export async function POST(req: NextRequest) {
         };
 
         const courseSubjects = COURSE_SUBJECTS[row.course] || ['Physics', 'Chemistry', 'Mathematics'];
-        const marksData = [];
+        const marksData: { subject: string; obtained: number; total: number; pct: number; grade: string }[] = [];
 
         for (const subject of courseSubjects) {
             const mv = markValues[subject];
@@ -77,6 +84,7 @@ export async function POST(req: NextRequest) {
             marksData.push({ subject, obtained: mv.obtained, total: mv.total, pct, grade: getGrade(pct) });
         }
 
+        // Optional biology for non-bio courses
         if (!courseSubjects.includes('Biology') && row.biology !== undefined) {
             const mv = markValues['Biology'];
             const pct = mv.total > 0 ? Math.round((mv.obtained / mv.total) * 100) : 0;
@@ -101,7 +109,15 @@ export async function POST(req: NextRequest) {
         if (rErr) {
             errors.push(`Saved student but failed to save result: ${row.name}`);
         } else {
-            results.push({ name: row.name, roll: row.roll, pct: overallPct, grade: finalGrade });
+            // ── KEY CHANGE: now includes marks and course for PDF download ──
+            results.push({
+                name: row.name,
+                roll: row.roll,
+                pct: overallPct,
+                grade: finalGrade,
+                course: row.course,
+                marks: marksData,
+            });
         }
     }
 
