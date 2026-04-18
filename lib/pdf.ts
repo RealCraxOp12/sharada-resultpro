@@ -282,7 +282,7 @@ export function buildReportHTML(data: ReportCardData): string {
     
     <div style="text-align:center;width:180px">
       <div style="padding:8px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc">
-        <div style="font-size:11px;color:#475569;font-weight:600;letter-spacing:0.5px">✔ Truly Authentic</div>
+        <div style="font-size:11px;color:#475569;font-weight:600;letter-spacing:0.5px"> Truly Authentic</div>
       </div>
     </div>
 
