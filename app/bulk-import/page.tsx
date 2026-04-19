@@ -1,16 +1,13 @@
 'use client';
-
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 interface ImportedResult {
-    name: string;
-    roll: string;
-    pct: number;
-    grade: string;
+    name: string; roll: string; pct: number; grade: string; course: string;
     marks: { subject: string; obtained: number; total: number; pct: number; grade: string }[];
-    course: string;
 }
+const GRADE_COLOR: Record<string, string> = { A: '#4ade80', B: '#60a5fa', C: '#facc15', D: '#f87171' };
+const COURSE_COLORS: Record<string, string> = { PCM: '#3b82f6', PCMB: '#a855f7', JEE: '#f97316', NEET: '#22c55e', CET: '#eab308' };
 
 export default function BulkImportPage() {
     const [examName, setExamName] = useState('');
@@ -21,323 +18,226 @@ export default function BulkImportPage() {
     const [errorLog, setErrorLog] = useState<string[]>([]);
     const [successCount, setSuccessCount] = useState(0);
     const [errorCount, setErrorCount] = useState(0);
-    const [downloadingAll, setDownloadingAll] = useState(false);
-    const [downloadProgress, setDownloadProgress] = useState('');
+    const [dlAll, setDlAll] = useState(false);
+    const [dlProgress, setDlProgress] = useState('');
+    const [visible, setVisible] = useState(false);
 
-    const gradeColor: Record<string, string> = {
-        A: 'text-green-400', B: 'text-blue-400', C: 'text-yellow-400', D: 'text-red-400',
-    };
+    useEffect(() => { setTimeout(() => setVisible(true), 50); }, []);
 
     async function downloadTemplate() {
         const res = await fetch('/api/bulk-import/template');
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'Sharada_Marks_Import_Template.xlsx';
-        a.click();
-        URL.revokeObjectURL(url);
+        const a = document.createElement('a'); a.href = url; a.download = 'Sharada_Marks_Import_Template.xlsx'; a.click(); URL.revokeObjectURL(url);
     }
-
     async function handleUpload() {
-        if (!file) return alert('Please select an Excel file!');
-        if (!examName) return alert('Please enter exam name!');
-
+        if (!file) return alert('Select a file!');
+        if (!examName) return alert('Enter exam name!');
         setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('exam_name', examName);
-
-        const res = await fetch('/api/bulk-import/upload', { method: 'POST', body: formData });
+        const fd = new FormData(); fd.append('file', file); fd.append('exam_name', examName);
+        const res = await fetch('/api/bulk-import/upload', { method: 'POST', body: fd });
         const data = await res.json();
-
         setUploading(false);
         if (!res.ok) return alert(data.error || 'Upload failed');
-
-        setSuccessCount(data.success);
-        setErrorCount(data.errors);
-        setResults(data.results || []);
-        setErrorLog(data.errorLog || []);
-        setDone(true);
+        setSuccessCount(data.success); setErrorCount(data.errors);
+        setResults(data.results || []); setErrorLog(data.errorLog || []); setDone(true);
     }
-
     async function downloadSinglePDF(r: ImportedResult) {
-        const instituteRes = await fetch('/api/settings');
-        const instituteData = await instituteRes.json();
-
+        const inst = await fetch('/api/settings').then(x => x.json());
         const marks = r.marks;
         const totalObt = marks.reduce((s, m) => s + m.obtained, 0);
         const totalMax = marks.reduce((s, m) => s + m.total, 0);
         const overallPct = totalMax > 0 ? Math.round((totalObt / totalMax) * 100) : 0;
         const getGrade = (p: number) => p >= 90 ? 'A' : p >= 75 ? 'B' : p >= 50 ? 'C' : 'D';
         const sorted = [...marks].sort((a, b) => b.pct - a.pct);
-
-        const res = await fetch('/api/pdf', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                student: {
-                    name: r.name,
-                    roll: r.roll,
-                    course: r.course,
-                    batch: '2025-26',
-                },
-                institute: instituteData.institute,
-                exam: examName,
-                marks,
-                summary: {
-                    totalObtained: totalObt,
-                    totalMax,
-                    overallPct,
-                    finalGrade: getGrade(overallPct),
-                    bestSubject: sorted[0],
-                    weakSubject: sorted[sorted.length - 1],
-                },
-            }),
-        });
-
-        if (res.ok) {
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${r.name}_${r.course}_Result.pdf`;
-            a.click();
-            URL.revokeObjectURL(url);
-        } else {
-            alert(`PDF failed for ${r.name}`);
-        }
+        const res = await fetch('/api/pdf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ student: { name: r.name, roll: r.roll, course: r.course, batch: '2025-26' }, institute: inst.institute, exam: examName, marks, summary: { totalObtained: totalObt, totalMax, overallPct, finalGrade: getGrade(overallPct), bestSubject: sorted[0], weakSubject: sorted[sorted.length - 1] } }) });
+        if (res.ok) { const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${r.name}_${r.course}_Result.pdf`; a.click(); URL.revokeObjectURL(url); }
+        else alert(`PDF failed for ${r.name}`);
     }
-
     async function downloadAllPDFs() {
-        setDownloadingAll(true);
-        for (let i = 0; i < results.length; i++) {
-            setDownloadProgress(`${i + 1} of ${results.length}`);
-            await downloadSinglePDF(results[i]);
-            await new Promise(r => setTimeout(r, 900));
-        }
-        setDownloadProgress('');
-        setDownloadingAll(false);
+        setDlAll(true);
+        for (let i = 0; i < results.length; i++) { setDlProgress(`${i + 1} of ${results.length}`); await downloadSinglePDF(results[i]); await new Promise(r => setTimeout(r, 900)); }
+        setDlProgress(''); setDlAll(false);
     }
-
-    function reset() {
-        setFile(null);
-        setExamName('');
-        setDone(false);
-        setResults([]);
-        setErrorLog([]);
-        setSuccessCount(0);
-        setErrorCount(0);
-        setDownloadProgress('');
-    }
+    function reset() { setFile(null); setExamName(''); setDone(false); setResults([]); setErrorLog([]); setSuccessCount(0); setErrorCount(0); setDlProgress(''); }
 
     return (
-        <div className="text-white max-w-4xl">
+        <>
+            <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
+            .bp-root { font-family:'Inter',sans-serif; color:#f1f5f9; max-width:800px; opacity:0; transform:translateY(16px); transition:opacity .5s ease,transform .5s ease; }
+            .bp-root.show { opacity:1; transform:translateY(0); }
+            .bp-title { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; letter-spacing:-.03em; }
+            .bp-sub { font-size:12px; color:#334155; margin-top:3px; }
+            .bp-card { background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.05); border-radius:16px; padding:20px; margin-bottom:14px; }
+            .bp-step { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#f97316; color:white; font-size:10px; font-weight:800; flex-shrink:0; }
+            .bp-step-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#f1f5f9; }
+            .bp-inp { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:10px 14px; font-size:13px; color:#e2e8f0; font-family:'Inter',sans-serif; outline:none; transition:border-color .18s; width:100%; }
+            .bp-inp:focus { border-color:rgba(249,115,22,.4); }
+            .bp-inp::placeholder { color:#1e293b; }
+            .bp-drop { border:2px dashed rgba(255,255,255,.07); border-radius:12px; padding:32px; text-align:center; cursor:pointer; transition:all .2s; }
+            .bp-drop:hover { border-color:rgba(249,115,22,.3); background:rgba(249,115,22,.02); }
+            .bp-drop.has-file { border-color:rgba(34,197,94,.3); background:rgba(34,197,94,.02); border-style:solid; }
+            .bp-btn { padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:none; font-family:'Inter',sans-serif; transition:all .18s; }
+            .bp-btn-orange { background:#f97316; color:white; box-shadow:0 2px 12px rgba(249,115,22,.2); width:100%; padding:14px; border-radius:12px; font-size:14px; }
+            .bp-btn-orange:hover:not(:disabled) { background:#ea580c; transform:translateY(-1px); }
+            .bp-btn-blue { background:rgba(59,130,246,.1); border:1px solid rgba(59,130,246,.2); color:#60a5fa; width:100%; padding:14px; border-radius:12px; font-size:14px; }
+            .bp-btn-blue:hover:not(:disabled) { background:rgba(59,130,246,.18); }
+            .bp-btn-green { background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.2); color:#4ade80; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600; }
+            .bp-btn-green:hover { background:rgba(34,197,94,.18); }
+            .bp-btn-ghost { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); color:#475569; flex:1; padding:12px; border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all .18s; }
+            .bp-btn-ghost:hover { background:rgba(255,255,255,.07); color:#94a3b8; }
+            .bp-btn:disabled { opacity:.5; cursor:not-allowed; }
+            .bp-table { width:100%; border-collapse:collapse; font-size:13px; }
+            .bp-thead tr { background:rgba(255,255,255,.02); border-bottom:1px solid rgba(255,255,255,.05); }
+            .bp-thead th { padding:11px 14px; text-align:left; font-size:9.5px; font-weight:700; color:#1e293b; text-transform:uppercase; letter-spacing:.1em; }
+            .bp-tbody tr { border-bottom:1px solid rgba(255,255,255,.03); transition:background .15s; }
+            .bp-tbody tr:last-child { border-bottom:none; }
+            .bp-tbody tr:hover { background:rgba(255,255,255,.02); }
+            .bp-tbody td { padding:11px 14px; vertical-align:middle; }
+            .bp-note-item { font-size:12px; color:#334155; padding:4px 0; display:flex; align-items:flex-start; gap:8px; }
+            .bp-note-dot { width:4px; height:4px; border-radius:50%; background:#334155; flex-shrink:0; margin-top:6px; }
+        `}</style>
+            <div className={`bp-root ${visible ? 'show' : ''}`}>
+                <div style={{ marginBottom: 24 }}>
+                    <div className="bp-title">Bulk Import Marks</div>
+                    <div className="bp-sub">Upload Excel with student details and marks — system auto-creates students and results</div>
+                </div>
 
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold">📊 Bulk Import Marks</h1>
-                <p className="text-gray-400 mt-1">
-                    Upload an Excel sheet with student details and marks — system auto-creates students and results.
-                </p>
-            </div>
-
-            {!done ? (
-                <div className="space-y-6">
-
-                    {/* Step 1 */}
-                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">Step 1</span>
-                                    <h2 className="font-bold text-lg">Download Template</h2>
+                {!done ? (
+                    <div>
+                        {/* Step 1 */}
+                        <div className="bp-card">
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                        <span className="bp-step">1</span>
+                                        <span className="bp-step-title">Download Template</span>
+                                    </div>
+                                    <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.6, marginBottom: 6 }}>
+                                        Download the Excel template, fill in student details and marks, then upload below.
+                                    </div>
+                                    <div style={{ fontSize: 11, color: '#22c55e' }}>✓ Biology is optional — leave blank if not applicable</div>
                                 </div>
-                                <p className="text-gray-400 text-sm mb-1">
-                                    Download the Excel template, fill in student details and marks, then upload below.
-                                </p>
-                                <p className="text-gray-500 text-xs">
-                                    Columns: Student Name · Roll No · Course · Batch · Parent Name · Phone ·
-                                    Physics · Physics_Total · Chemistry · Chemistry_Total ·
-                                    Mathematics · Mathematics_Total · Biology · Biology_Total
-                                </p>
-                                <p className="text-green-400 text-xs mt-2">
-                                    ✓ Biology is optional — leave blank if not applicable
-                                </p>
+                                <button className="bp-btn bp-btn-green" onClick={downloadTemplate} style={{ flexShrink: 0 }}>⬇ Template</button>
                             </div>
-                            <button
-                                onClick={downloadTemplate}
-                                className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition"
-                            >
-                                ⬇ Download Template
+                        </div>
+
+                        {/* Step 2 */}
+                        <div className="bp-card">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                <span className="bp-step">2</span>
+                                <span className="bp-step-title">Exam Name</span>
+                            </div>
+                            <input className="bp-inp" value={examName} onChange={e => setExamName(e.target.value)} placeholder="e.g. Unit Test 1, Mid Term, Final Exam…" style={{ maxWidth: 400 }} />
+                        </div>
+
+                        {/* Step 3 */}
+                        <div className="bp-card">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                <span className="bp-step">3</span>
+                                <span className="bp-step-title">Upload Excel</span>
+                            </div>
+                            <div className={`bp-drop ${file ? 'has-file' : ''}`} onClick={() => document.getElementById('bpFileInput')?.click()}>
+                                <div style={{ fontSize: 24, marginBottom: 8, opacity: .4 }}>{file ? '✓' : '⊞'}</div>
+                                <div style={{ fontSize: 13, fontWeight: 500, color: file ? '#4ade80' : '#475569' }}>{file ? file.name : 'Click to select Excel file'}</div>
+                                <div style={{ fontSize: 11, color: '#1e293b', marginTop: 4 }}>.xlsx or .xls files only</div>
+                                <input id="bpFileInput" type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
+                            </div>
+                            {file && <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 12, color: '#4ade80' }}>✓ {file.name}</span>
+                                <button onClick={() => setFile(null)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 11 }}>✕ Remove</button>
+                            </div>}
+                        </div>
+
+                        <button className="bp-btn bp-btn-orange" onClick={handleUpload} disabled={uploading || !file || !examName} style={{ marginBottom: 14 }}>
+                            {uploading ? '⏳ Processing… please wait' : '🚀 Import Students & Marks'}
+                        </button>
+
+                        {/* Notes */}
+                        <div className="bp-card">
+                            <div style={{ fontSize: 10, fontWeight: 700, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>Important Notes</div>
+                            {[
+                                'Course must be exactly: PCM, PCMB, JEE, NEET or CET',
+                                'If a student already exists (same Roll No), details will be updated',
+                                'Leave Biology columns blank for PCM / JEE / CET students',
+                                'If Total columns are blank, system assumes 100 marks each',
+                                'Old manually entered results are not affected',
+                            ].map((note, i) => (
+                                <div key={i} className="bp-note-item"><div className="bp-note-dot" />{note}</div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div>
+                        {/* Summary */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                            <div style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)', borderRadius: 14, padding: '20px', textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Syne,sans-serif', fontSize: 36, fontWeight: 800, color: '#4ade80' }}>{successCount}</div>
+                                <div style={{ fontSize: 12, color: '#334155', marginTop: 4 }}>Imported successfully</div>
+                            </div>
+                            <div style={{ background: errorCount > 0 ? 'rgba(239,68,68,.06)' : 'rgba(255,255,255,.02)', border: `1px solid ${errorCount > 0 ? 'rgba(239,68,68,.15)' : 'rgba(255,255,255,.05)'}`, borderRadius: 14, padding: '20px', textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Syne,sans-serif', fontSize: 36, fontWeight: 800, color: errorCount > 0 ? '#f87171' : '#1e293b' }}>{errorCount}</div>
+                                <div style={{ fontSize: 12, color: '#334155', marginTop: 4 }}>Rows skipped</div>
+                            </div>
+                        </div>
+
+                        {results.length > 0 && (
+                            <button className="bp-btn bp-btn-blue" onClick={downloadAllPDFs} disabled={dlAll} style={{ marginBottom: 14 }}>
+                                {dlAll ? `⏳ Downloading ${dlProgress}…` : `⬇ Download All ${results.length} PDFs`}
                             </button>
-                        </div>
-                    </div>
+                        )}
 
-                    {/* Step 2 */}
-                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">Step 2</span>
-                            <h2 className="font-bold text-lg">Enter Exam Name</h2>
-                        </div>
-                        <input
-                            value={examName}
-                            onChange={e => setExamName(e.target.value)}
-                            placeholder="e.g. Unit Test 1, Mid Term, Final Exam..."
-                            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 max-w-md"
-                        />
-                    </div>
-
-                    {/* Step 3 */}
-                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">Step 3</span>
-                            <h2 className="font-bold text-lg">Upload Filled Excel</h2>
-                        </div>
-                        <div
-                            className="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center cursor-pointer hover:border-orange-500 transition"
-                            onClick={() => document.getElementById('fileInput')?.click()}
-                        >
-                            <div className="text-4xl mb-3">📂</div>
-                            <p className="text-gray-300 font-medium">
-                                {file ? file.name : 'Click to select Excel file'}
-                            </p>
-                            <p className="text-gray-500 text-sm mt-1">.xlsx or .xls files only</p>
-                            <input
-                                id="fileInput"
-                                type="file"
-                                accept=".xlsx,.xls"
-                                className="hidden"
-                                onChange={e => setFile(e.target.files?.[0] || null)}
-                            />
-                        </div>
-                        {file && (
-                            <div className="mt-3 flex items-center gap-3">
-                                <span className="text-green-400 text-sm">✓ {file.name} selected</span>
-                                <button onClick={() => setFile(null)} className="text-gray-500 hover:text-red-400 text-xs transition">✕ Remove</button>
+                        {results.length > 0 && (
+                            <div className="bp-card" style={{ padding: 0, overflow: 'hidden', marginBottom: 14 }}>
+                                <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
+                                    <div style={{ fontFamily: 'Syne,sans-serif', fontSize: 14, fontWeight: 700 }}>✓ Imported Results</div>
+                                    <div style={{ fontSize: 11, color: '#334155', marginTop: 2 }}>All students and results saved to database</div>
+                                </div>
+                                <table className="bp-table">
+                                    <thead className="bp-thead"><tr>
+                                        <th>Student</th><th>Roll No</th><th>Course</th><th style={{ textAlign: 'center' }}>%</th><th style={{ textAlign: 'center' }}>Grade</th><th style={{ textAlign: 'center' }}>PDF</th>
+                                    </tr></thead>
+                                    <tbody className="bp-tbody">
+                                        {results.map((r, i) => {
+                                            const c = r.course || 'PCM';
+                                            const cc = COURSE_COLORS[c] || '#94a3b8';
+                                            const gc = GRADE_COLOR[r.grade] || '#f87171';
+                                            const pctColor = r.pct >= 75 ? '#4ade80' : r.pct >= 50 ? '#facc15' : '#f87171';
+                                            return (
+                                                <tr key={i}>
+                                                    <td style={{ fontWeight: 500, color: '#e2e8f0' }}>{r.name}</td>
+                                                    <td style={{ color: '#334155', fontFamily: 'monospace', fontSize: 11 }}>{r.roll}</td>
+                                                    <td><span style={{ background: `${cc}14`, color: cc, padding: '2px 9px', borderRadius: 20, fontSize: 10.5, fontWeight: 700 }}>{c}</span></td>
+                                                    <td style={{ textAlign: 'center', fontWeight: 700, color: pctColor }}>{r.pct}%</td>
+                                                    <td style={{ textAlign: 'center' }}><span style={{ background: `${gc}14`, color: gc, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800 }}>{r.grade}</span></td>
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        <button className="bp-btn" style={{ background: 'rgba(59,130,246,.1)', border: '1px solid rgba(59,130,246,.2)', color: '#60a5fa', padding: '5px 12px', borderRadius: 8, fontSize: 11 }} onClick={() => downloadSinglePDF(r)}>⬇ PDF</button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
-                    </div>
 
-                    <button
-                        onClick={handleUpload}
-                        disabled={uploading || !file || !examName}
-                        className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-bold text-lg transition"
-                    >
-                        {uploading ? '⏳ Processing... please wait' : '🚀 Import Students & Marks'}
-                    </button>
-
-                    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                        <h3 className="font-bold text-sm text-gray-300 mb-3">📋 Important Notes</h3>
-                        <ul className="space-y-1.5 text-sm text-gray-400">
-                            <li>• Course must be exactly: <strong className="text-white">PCM, PCMB, JEE, NEET or CET</strong></li>
-                            <li>• If a student already exists (same Roll No), their details will be updated</li>
-                            <li>• Leave Biology columns blank for PCM / JEE / CET students</li>
-                            <li>• If Total columns are blank, system assumes 100 marks each</li>
-                            <li>• Old manually entered results are <strong className="text-white">not affected</strong></li>
-                        </ul>
-                    </div>
-
-                </div>
-            ) : (
-                <div className="space-y-6">
-
-                    {/* Summary */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-green-500/20 border border-green-500/30 rounded-2xl p-6 text-center">
-                            <div className="text-4xl font-bold text-green-400">{successCount}</div>
-                            <div className="text-green-300 mt-1">Students imported successfully</div>
-                        </div>
-                        <div className={`${errorCount > 0 ? 'bg-red-500/20 border-red-500/30' : 'bg-gray-900 border-gray-800'} border rounded-2xl p-6 text-center`}>
-                            <div className={`text-4xl font-bold ${errorCount > 0 ? 'text-red-400' : 'text-gray-400'}`}>{errorCount}</div>
-                            <div className={`mt-1 ${errorCount > 0 ? 'text-red-300' : 'text-gray-400'}`}>Rows skipped</div>
-                        </div>
-                    </div>
-
-                    {/* Download All PDFs */}
-                    {results.length > 0 && (
-                        <button
-                            onClick={downloadAllPDFs}
-                            disabled={downloadingAll}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-4 rounded-2xl font-bold text-lg transition flex items-center justify-center gap-3"
-                        >
-                            {downloadingAll
-                                ? `⏳ Downloading ${downloadProgress}...`
-                                : `📥 Download All ${results.length} PDFs`
-                            }
-                        </button>
-                    )}
-
-                    {/* Results Table */}
-                    {results.length > 0 && (
-                        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-                            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-                                <div>
-                                    <h2 className="font-bold">✅ Imported Results</h2>
-                                    <p className="text-gray-400 text-sm mt-0.5">All students and results saved to database</p>
-                                </div>
+                        {errorLog.length > 0 && (
+                            <div style={{ background: 'rgba(239,68,68,.05)', border: '1px solid rgba(239,68,68,.12)', borderRadius: 14, padding: '16px', marginBottom: 14 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: '#f87171', marginBottom: 8 }}>⚠ Skipped Rows</div>
+                                {errorLog.map((e, i) => <div key={i} style={{ fontSize: 11, color: '#fca5a5', padding: '2px 0' }}>{e}</div>)}
                             </div>
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-gray-800">
-                                        <th className="text-left px-4 py-3 text-gray-400 font-medium">Student</th>
-                                        <th className="text-left px-4 py-3 text-gray-400 font-medium">Roll No</th>
-                                        <th className="text-center px-4 py-3 text-gray-400 font-medium">Percentage</th>
-                                        <th className="text-center px-4 py-3 text-gray-400 font-medium">Grade</th>
-                                        <th className="text-center px-4 py-3 text-gray-400 font-medium">PDF</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {results.map((r, i) => (
-                                        <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                                            <td className="px-4 py-3 font-medium">{r.name}</td>
-                                            <td className="px-4 py-3 text-gray-400">{r.roll}</td>
-                                            <td className={`px-4 py-3 text-center font-bold ${gradeColor[r.grade]}`}>{r.pct}%</td>
-                                            <td className={`px-4 py-3 text-center font-bold ${gradeColor[r.grade]}`}>{r.grade}</td>
-                                            <td className="px-4 py-3 text-center">
-                                                <button
-                                                    onClick={() => downloadSinglePDF(r)}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg transition font-medium"
-                                                >
-                                                    📥 PDF
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Error Log */}
-                    {errorLog.length > 0 && (
-                        <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5">
-                            <h3 className="font-bold text-red-400 mb-3">⚠ Skipped Rows</h3>
-                            <ul className="space-y-1">
-                                {errorLog.map((e, i) => (
-                                    <li key={i} className="text-red-300 text-sm">{e}</li>
-                                ))}
-                            </ul>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <button className="bp-btn-ghost" onClick={reset}>⬆ Import Another</button>
+                            <Link href="/results" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', borderRadius: 12, background: '#f97316', color: 'white', fontSize: 13, fontWeight: 600, textDecoration: 'none', transition: 'all .18s' }}>
+                                View Results →
+                            </Link>
                         </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex gap-3">
-                        <button
-                            onClick={reset}
-                            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-2xl font-bold transition"
-                        >
-                            ⬆ Import Another Sheet
-                        </button>
-                        <Link
-                            href="/results"
-                            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-2xl font-bold transition text-center"
-                        >
-                            📄 View All Results →
-                        </Link>
                     </div>
-
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </>
     );
 }
