@@ -187,7 +187,7 @@ export default function Sidebar() {
             <aside className="sb-root">
                 <div className="sb-top">
                     <div className="sb-logo-wrap">
-                        <Image src="/sharadalogo.png" alt="Sharada" width={36} height={36} className="object-contain" />
+                        <Image src="public\sharadalogo.png" alt="Sharada" width={36} height={36} className="object-contain" />
                     </div>
                     <div className="sb-brand">
                         <div className="sb-brand-name">ResultPro</div>
