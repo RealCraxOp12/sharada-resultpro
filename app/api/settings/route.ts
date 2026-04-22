@@ -2,35 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
-    const { data, error } = await supabaseAdmin
-        .from('institutes')
-        .select('*')
-        .limit(1)
-        .single();
+    const { data } = await supabaseAdmin
+        .from('institutes').select('*').limit(1).single();
 
-    if (error) {
-        return NextResponse.json({
-            institute: {
-                name: 'Sharada Classes',
-                address: 'Main Road, Dapoli, Ratnagiri – 415 712',
-                phone: '+91 98765 43210',
-                email: 'info@sharadaclasses.in',
-            }
-        });
-    }
-
-    return NextResponse.json({ institute: data });
+    return NextResponse.json({
+        institute: data || {
+            name: 'Sharada Classes',
+            address: 'Main Road, Dapoli, Ratnagiri – 415 712',
+            phone: '+91 98765 43210',
+            email: 'info@sharadaclasses.in',
+        }
+    });
 }
 
 export async function POST(req: NextRequest) {
-    const body = await req.json();
-    const { name, address, phone, email } = body;
+    const { name, address, phone, email } = await req.json();
 
-    const { error } = await supabaseAdmin
-        .from('institutes')
-        .update({ name, address, phone, email })
-        .eq('name', 'Sharada Classes');
+    // Try update first, if no rows exist then insert
+    const { data: existing } = await supabaseAdmin
+        .from('institutes').select('id').limit(1).single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (existing?.id) {
+        await supabaseAdmin.from('institutes')
+            .update({ name, address, phone, email })
+            .eq('id', existing.id);
+    } else {
+        await supabaseAdmin.from('institutes')
+            .insert({ name, address, phone, email });
+    }
+
     return NextResponse.json({ success: true });
 }

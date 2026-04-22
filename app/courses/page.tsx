@@ -1,17 +1,33 @@
 'use client';
 import { useEffect, useState } from 'react';
 
-const COURSES: Record<string, { subjects: string[]; desc: string; color: string; accent: string }> = {
-    PCM: { subjects: ['Physics', 'Chemistry', 'Mathematics'], desc: 'Standard science stream — engineering aspirants', color: '#3b82f6', accent: 'rgba(59,130,246,.08)' },
-    PCMB: { subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology'], desc: 'Combined stream — medical & engineering', color: '#a855f7', accent: 'rgba(168,85,247,.08)' },
-    JEE: { subjects: ['Physics', 'Chemistry', 'Mathematics'], desc: 'IIT-JEE focused preparation', color: '#f97316', accent: 'rgba(249,115,22,.08)' },
-    NEET: { subjects: ['Physics', 'Chemistry', 'Biology'], desc: 'Medical entrance (NEET-UG) preparation', color: '#22c55e', accent: 'rgba(34,197,94,.08)' },
-    CET: { subjects: ['Physics', 'Chemistry', 'Mathematics'], desc: 'Maharashtra CET state entrance prep', color: '#eab308', accent: 'rgba(234,179,8,.08)' },
+const COACHING_COURSES: Record<string, { subjects: string[]; desc: string; color: string }> = {
+    PCM: { subjects: ['Physics', 'Chemistry', 'Mathematics'], desc: 'Standard science stream — engineering aspirants', color: '#3b82f6' },
+    PCMB: { subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology'], desc: 'Combined stream — medical & engineering', color: '#a855f7' },
+    JEE: { subjects: ['Physics', 'Chemistry', 'Mathematics'], desc: 'IIT-JEE focused preparation', color: '#f97316' },
+    NEET: { subjects: ['Physics', 'Chemistry', 'Biology'], desc: 'Medical entrance (NEET-UG) preparation', color: '#22c55e' },
+    CET: { subjects: ['Physics', 'Chemistry', 'Mathematics'], desc: 'Maharashtra CET state entrance prep', color: '#eab308' },
 };
-const SUBJECT_ICONS: Record<string, string> = { Physics: '⚛', Chemistry: '⚗', Mathematics: '∑', Biology: '◉' };
+
+const SCHOOL_CLASSES: Record<string, { compulsory: string[]; optional: string[]; color: string }> = {
+    'Class 5': { compulsory: ['Maths', 'Science', 'English'], optional: ['Sanskrit'], color: '#06b6d4' },
+    'Class 6': { compulsory: ['Maths', 'Science', 'English'], optional: ['Sanskrit'], color: '#06b6d4' },
+    'Class 7': { compulsory: ['Maths', 'Science', 'English'], optional: ['Sanskrit'], color: '#06b6d4' },
+    'Class 8': { compulsory: ['Maths', 'Science', 'English'], optional: ['Sanskrit', 'IT', 'Marathi Grammar', 'Hindi Grammar'], color: '#8b5cf6' },
+    'Class 9': { compulsory: ['Maths 1', 'Maths 2', 'Science 1', 'Science 2', 'English'], optional: ['Sanskrit', 'IT', 'Marathi Grammar', 'Hindi Grammar'], color: '#ec4899' },
+    'Class 10': { compulsory: ['Maths 1', 'Maths 2', 'Science 1', 'Science 2', 'English'], optional: ['Sanskrit', 'IT', 'Marathi Grammar', 'Hindi Grammar'], color: '#ec4899' },
+};
+
+const SUBJECT_ICONS: Record<string, string> = {
+    Physics: '⚛', Chemistry: '⚗', Mathematics: '∑', Biology: '◉',
+    Maths: '∑', Science: '⚗', English: '◈', Sanskrit: 'ॐ',
+    'Maths 1': '∑', 'Maths 2': '∑', 'Science 1': '⚗', 'Science 2': '⚗',
+    IT: '⊞', 'Marathi Grammar': '◆', 'Hindi Grammar': '◆',
+};
 
 export default function CoursesPage() {
     const [visible, setVisible] = useState(false);
+    const [tab, setTab] = useState<'coaching' | 'school'>('coaching');
     useEffect(() => { setTimeout(() => setVisible(true), 50); }, []);
 
     return (
@@ -22,64 +38,106 @@ export default function CoursesPage() {
             .cp-root.show { opacity:1; transform:translateY(0); }
             .cp-title { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; letter-spacing:-.03em; }
             .cp-sub { font-size:12px; color:#334155; margin-top:3px; }
+            .cp-tabs { display:flex; gap:4px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.05); border-radius:12px; padding:4px; margin-bottom:24px; width:fit-content; }
+            .cp-tab { padding:8px 20px; border-radius:9px; font-size:12.5px; font-weight:600; cursor:pointer; border:none; font-family:'Inter',sans-serif; transition:all .18s; background:transparent; color:#475569; }
+            .cp-tab.active { background:rgba(255,255,255,.06); color:#f1f5f9; }
             .cp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
             @media(max-width:900px){ .cp-grid { grid-template-columns:repeat(2,1fr); } }
-            @media(max-width:600px){ .cp-grid { grid-template-columns:1fr; } }
-            .cp-card {
-                background:rgba(255,255,255,.02);
-                border:1px solid rgba(255,255,255,.05);
-                border-radius:16px; padding:22px 20px;
-                position:relative; overflow:hidden;
-                transition:border-color .2s,transform .2s,background .2s;
-                cursor:default;
-            }
+            .cp-card { background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.05); border-radius:16px; padding:20px; position:relative; overflow:hidden; transition:border-color .2s,transform .2s,background .2s; }
             .cp-card:hover { border-color:rgba(255,255,255,.09); background:rgba(255,255,255,.03); transform:translateY(-2px); }
-            .cp-card-glow { position:absolute; top:0; right:0; width:100px; height:100px; border-radius:50%; filter:blur(40px); pointer-events:none; transform:translate(30px,-30px); opacity:.5; }
-            .cp-card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
-            .cp-course-name { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; letter-spacing:-.02em; }
-            .cp-count { font-size:10px; font-weight:700; color:#1e293b; padding:3px 9px; border-radius:20px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); letter-spacing:.06em; }
-            .cp-desc { font-size:11.5px; color:#334155; margin-bottom:16px; line-height:1.5; }
-            .cp-divider { height:1px; background:rgba(255,255,255,.04); margin-bottom:14px; }
-            .cp-subjects { display:flex; flex-direction:column; gap:6px; }
-            .cp-subject { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.04); transition:background .15s; }
+            .cp-glow { position:absolute; top:0; right:0; width:80px; height:80px; border-radius:50%; filter:blur(30px); pointer-events:none; transform:translate(20px,-20px); opacity:.4; }
+            .cp-name { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; letter-spacing:-.02em; margin-bottom:4px; }
+            .cp-desc { font-size:11px; color:#334155; margin-bottom:14px; line-height:1.5; }
+            .cp-divider { height:1px; background:rgba(255,255,255,.04); margin-bottom:12px; }
+            .cp-subjects { display:flex; flex-direction:column; gap:5px; }
+            .cp-subject { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.03); transition:background .15s; }
             .cp-subject:hover { background:rgba(255,255,255,.04); }
-            .cp-subject-icon { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
-            .cp-subject-name { font-size:12.5px; font-weight:500; color:#cbd5e1; }
-            .cp-active-dot { width:5px; height:5px; border-radius:50%; background:#22c55e; box-shadow:0 0 6px rgba(34,197,94,.5); flex-shrink:0; }
-            .cp-active-label { font-size:9px; font-weight:700; color:#22c55e; letter-spacing:.08em; text-transform:uppercase; margin-top:14px; display:flex; align-items:center; gap:5px; }
+            .cp-subject-icon { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+            .cp-subject-name { font-size:12px; font-weight:500; color:#cbd5e1; }
+            .cp-opt-label { font-size:9px; font-weight:700; color:#1e293b; text-transform:uppercase; letter-spacing:.08em; margin:10px 0 6px; }
+            .cp-opt-subject { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:8px; background:rgba(255,255,255,.01); border:1px dashed rgba(255,255,255,.05); }
+            .cp-opt-tag { font-size:8px; font-weight:700; color:#1e293b; background:rgba(255,255,255,.04); padding:1px 6px; border-radius:6px; margin-left:auto; }
+            .cp-active { font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-top:12px; display:flex; align-items:center; gap:5px; }
+            .cp-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
         `}</style>
+
             <div className={`cp-root ${visible ? 'show' : ''}`}>
-                <div style={{ marginBottom: 28 }}>
+                <div style={{ marginBottom: 20 }}>
                     <div className="cp-title">Courses</div>
-                    <div className="cp-sub">5 active courses · Subject configuration</div>
+                    <div className="cp-sub">Active courses and subject configuration</div>
                 </div>
-                <div className="cp-grid">
-                    {Object.entries(COURSES).map(([name, info]) => (
-                        <div key={name} className="cp-card">
-                            <div className="cp-card-glow" style={{ background: info.color }} />
-                            <div className="cp-card-top">
-                                <div className="cp-course-name" style={{ color: info.color }}>{name}</div>
-                                <span className="cp-count">{info.subjects.length} subjects</span>
-                            </div>
-                            <div className="cp-desc">{info.desc}</div>
-                            <div className="cp-divider" />
-                            <div className="cp-subjects">
-                                {info.subjects.map(s => (
-                                    <div key={s} className="cp-subject">
-                                        <div className="cp-subject-icon" style={{ background: `${info.color}14`, color: info.color }}>
-                                            {SUBJECT_ICONS[s] || '◎'}
+
+                <div className="cp-tabs">
+                    <button className={`cp-tab ${tab === 'coaching' ? 'active' : ''}`} onClick={() => setTab('coaching')}>Coaching (PCM/JEE/NEET)</button>
+                    <button className={`cp-tab ${tab === 'school' ? 'active' : ''}`} onClick={() => setTab('school')}>School Section (Class 5–10)</button>
+                </div>
+
+                {tab === 'coaching' && (
+                    <div className="cp-grid">
+                        {Object.entries(COACHING_COURSES).map(([name, info]) => (
+                            <div key={name} className="cp-card">
+                                <div className="cp-glow" style={{ background: info.color }} />
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+                                    <div className="cp-name" style={{ color: info.color }}>{name}</div>
+                                    <span style={{ fontSize: 10, fontWeight: 700, color: '#1e293b', padding: '3px 9px', borderRadius: 20, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.06)' }}>{info.subjects.length} subjects</span>
+                                </div>
+                                <div className="cp-desc">{info.desc}</div>
+                                <div className="cp-divider" />
+                                <div className="cp-subjects">
+                                    {info.subjects.map(s => (
+                                        <div key={s} className="cp-subject">
+                                            <div className="cp-subject-icon" style={{ background: `${info.color}14`, color: info.color }}>{SUBJECT_ICONS[s] || '◎'}</div>
+                                            <div className="cp-subject-name">{s}</div>
                                         </div>
-                                        <div className="cp-subject-name">{s}</div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                                <div className="cp-active" style={{ color: '#22c55e' }}>
+                                    <div className="cp-dot" style={{ background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,.5)' }} />
+                                    Active
+                                </div>
                             </div>
-                            <div className="cp-active-label">
-                                <div className="cp-active-dot" />
-                                Active Course
+                        ))}
+                    </div>
+                )}
+
+                {tab === 'school' && (
+                    <div className="cp-grid">
+                        {Object.entries(SCHOOL_CLASSES).map(([cls, info]) => (
+                            <div key={cls} className="cp-card">
+                                <div className="cp-glow" style={{ background: info.color }} />
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+                                    <div className="cp-name" style={{ color: info.color }}>{cls}</div>
+                                    <span style={{ fontSize: 10, fontWeight: 700, color: '#1e293b', padding: '3px 9px', borderRadius: 20, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.06)' }}>{info.compulsory.length + info.optional.length} subjects</span>
+                                </div>
+                                <div className="cp-divider" />
+                                <div className="cp-subjects">
+                                    {info.compulsory.map(s => (
+                                        <div key={s} className="cp-subject">
+                                            <div className="cp-subject-icon" style={{ background: `${info.color}14`, color: info.color }}>{SUBJECT_ICONS[s] || '◎'}</div>
+                                            <div className="cp-subject-name">{s}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                                {info.optional.length > 0 && (
+                                    <>
+                                        <div className="cp-opt-label">Optional Subjects</div>
+                                        {info.optional.map(s => (
+                                            <div key={s} className="cp-opt-subject">
+                                                <div className="cp-subject-icon" style={{ background: 'rgba(255,255,255,.03)', color: '#334155' }}>{SUBJECT_ICONS[s] || '◎'}</div>
+                                                <div style={{ fontSize: 12, color: '#475569' }}>{s}</div>
+                                                <span className="cp-opt-tag">optional</span>
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
+                                <div className="cp-active" style={{ color: '#22c55e' }}>
+                                    <div className="cp-dot" style={{ background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,.5)' }} />
+                                    Active
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </>
     );
